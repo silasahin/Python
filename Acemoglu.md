@@ -30,7 +30,7 @@ When regressing it on the colonists'  mortality rates between the XVII and XIX c
 
 | N. | Correlation |
 | --- | ----------- |  
-| 1. | `potential settler mortality rates` major determinant in `settlements`<sup id="a1">[1](#f1)</sup> |
+| 1. | `potential settler mortality rates` major determinant in `settlements`<sup id="a1">[[1]](#f1)</sup> |
 | 2. | `settlements` major determinant in `institutions in 1900`|
 | 3. | `institutions in 1900` major determinant in `institutions today`|
 
@@ -42,6 +42,8 @@ It is fairly straightforward to demonstrate that the colonists expected mortalit
 > "The advantage of our approach is that conditional on the variables that we already control for, settler mortality more than 100 years ago should have no effect on output today, other than through its effect on institutions."                                                                                           
 > _Acemoglu et al., 2001_
 
-<b id="f1">1</b>: The Pilgrim Fathers decided to emigrate to the U.S. instead of Guyana because of their awareness about mortality rates in the latter country. [↩] (#a1)
+$log y_{i} = \mu + \alpha R_{i} + __X__^{'} _{i} + \epsilon_{i}$
+
+<a id="f1">[1]</a>: The Pilgrim Fathers decided to emigrate to the U.S. instead of Guyana because of their awareness about mortality rates in the latter country. [↩] (#a1)
 
                                      
