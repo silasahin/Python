@@ -1,4 +1,4 @@
-<script type="text/javascript" src=js/latexit.js></script>
+<head><script type="text/javascript" src=js/latexit.js></script>
 # The colonial Origins of Comparative Development: An Empirical Investigation 
 
 ******************************************************************* 
