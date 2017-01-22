@@ -1,3 +1,4 @@
+<script type="text/javascript" src=js/latexit.js></script>
 # The colonial Origins of Comparative Development: An Empirical Investigation 
 
 ******************************************************************* 
@@ -42,7 +43,7 @@ It is fairly straightforward to demonstrate that the colonists expected mortalit
 > "The advantage of our approach is that conditional on the variables that we already control for, settler mortality more than 100 years ago should have no effect on output today, other than through its effect on institutions."                                                                                           
 > _Acemoglu et al., 2001_
 
-log y_{i} = \mu + \alpha R_{i} + __X__^{'} _{i} + \epsilon_{i}
+<span lang="latex"> log y_{i} = \mu + \alpha R_{i} + __X__^{'} _{i} + \epsilon_{i} </span>
 
 <a id="f1">[1]</a>: The Pilgrim Fathers decided to emigrate to the U.S. instead of Guyana because of their awareness about mortality rates in the latter country. [↩] (#a1)
 
