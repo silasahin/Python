@@ -1,6 +1,6 @@
- #The colonial Origins of Comparative Development: An Empirical Investigation\
+# The colonial Origins of Comparative Development: An Empirical Investigation
 
-##Introduction
+## Introduction
 
 Is there a causal relationship between the quality of institutions and a country\'92s GDP or is the renowned correlation between the two due to the simple fact that only rich countries seem to be able to afford good institutional structures?\
 
