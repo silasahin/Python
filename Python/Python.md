@@ -1,0 +1,4057 @@
+
+# <center> The Colonial Origins of Comparative Development: <br /> An Empirical Investigation </center>
+
+
+*******************************************************************
+*Demetria Parisi*<br />
+*Francesca Ventimiglia*<br />
+*Sila Sahin*<br />
+
+******************************************************************* 
+*A summary of the paper by Daron Acemoglu, Simon Johnson, and James A. Robinson*
+
+******************************************************************* 
+
+
+### Abstract 
+How can the vast income disparities across the different countries of the world be explained? What are the causes of such phenomenon? In the following document, we will reproduce the work of *Acemoglu D. et al.* and estimate how the differences in institutions affect the economic performance of different countries measured by income (GDP) per capita. For this purpose, the authors use the disparity in mortality rates in countries colonized by Europeans as an instrumental variable to identify the exogenous variation in current institutions across countries. Indeed, the diverse colonization policies adopted by European colonizers resulted in differing institution types which persist to the present day. In countries where the mortality rate was high, for instance, the colonizers preferred to set up extractive institutions instead of settling. Hence, a two-stage least squares model is applied in which the differences in mortality rates are utilized as a source of exogenous variation in *institution quality*. Former colonies with high quality institutions are expected to have a better current economic performance as compared to the ones with merely extractive or low quality institutions since good institutions lead to higher investment in capital and more efficient use of resources. These conditions, in turn, are presumed to produce a higher level of income. The reproduced paper seeks to establish this relationship.  
+
+### Research question
+Using the instrumental variable approach with mortality rates in European colonies as an instrumental variable, what is the estimated effect of current quality of institutions on income per capita and therefore economic performance? In this context, our research question arises as, *“What are the fundamental causes of the large differences in income per capita across countries?”*.
+
+### Motivation 
+*The Colonial Origins of Comparative Development: An Empirical Investigation* by Acemoglu et al. is one of the most essential and influential scientific works in its field. It has been subject to numerous follow-up analysis and the basis of further research. Our motivation behind choosing this work was to illustrate a significant economic paper using the python program. An evaluation of the effect of institutions on economic performance impacts current policy decisions, which could possibly yield to an improvement in the level of income per capita in countries struggling with their economic performance. We try to establish this coherence by showing that improving institutions in low income countries will benefit the region's GDP per capita by a large and statistically significant amount. Moreover, this study allows to further research on the most appropriate ways to improve institutions by correcting for specific aspects such as property rights enforcement, rule of law and other institutional features. 
+
+### Assumptions 
+The model we are about to develop is based on three main assumptions:
+-	The colonization policies implemented by Europeans were numerous. However, we will focus on the extreme cases: on one hand, we find the “extractive” strategy, in which institutions were mainly directed towards the transfer of colonies’ resources to the colonizers without accounting for protection of property rights or protection against government expropriation; on the other hand, Europeans who decided to settle in the colonies created the so-called “Neo-Europes”, whose institutions were inspired by the European model. 
+-	The above mentioned policies were influenced by the mortality and disease rates of the colonies. In colonies with a high mortality rate, colonists implemented the “extractive” strategy, whereas colonizers were settling in the colonies and opting for a “Neo-Europes” strategy when the chances of death by yellow fever or malaria were low.
+-	The colonial state and the types of institution prevailed after independence up to current time.  
+
+To determine the variable *current institutions*, the authors use the *protection against risk of expropriation* index from [Political Risk Services](http://www.prsgroup.com/about-us/our-two-methodologies/prs). 
+
+### Method
+The choice of using an instrumental variable approach stems from the idea that early institutions can be related to a number of variables which could influence the estimated effect. Countries may differ in their level of income per capita for a variety of reasons, including cultural and geographical factors. By instrumentalizing mortality rates, we ensure that variation in GDP across countries results solely from the countries' institutional characteristics. The idea behind the presented model can be summarized as follows: the settlers' mortality rates influence the settlement decision and the colonization strategy; the implemented policy will then result in low or high quality of early institutions, which will be reflected in current institutions and economic performance. The first stage of the model will regress the level of current institutions, which is the treatment variable, on settler mortality rates, the instrumental variable. In the second stage, the outcome of interest, here the economic performance, will be regressed on the resulting exogenous variation in the level of current institutions.
+
+### Descriptive Statistics
+Before conducting the regression analysis, we take a look at the data and its properties. The sample contains data for every country in the world, comprising information on settler mortality, protection against expropriation risk, and PPP adjusted income (GDP) per capita in 1995. In the paper, the authors base their analysis on a subsample limited to 64 ex-colonies. Since we do not have access to detailed information concerning the subsample, we conduct our regression analysis on the given worldwide sample. The fact that the sample used by Acemoglu et al. is drawn from the data that we utilize, promises valid regression results approximating the findings of the paper. The variable describing the protection against expropriation risk serves to pick up institutional differences in the various countries. The graphical illustration of the variable suggests that the majority of countries tend to have higher quality institutions with more property rights. Regarding the income levels across countries according to the World Bank for the year 1995, the PPP adjusted GDP distribution nearly follows a normal distribution with most countries having an average income level, few countries having an extremely low GDP and some countries having an extremely high GDP level. Note that further information on the data and its sources can be found in <a id=a4>[Appendix Table A1](#f4)</a>, a table retrieved from the original paper.
+
+
+```python
+import math
+import numpy as np
+import pandas as pd
+from scipy import arange, optimize
+import matplotlib.pyplot as plt
+%matplotlib inline
+```
+
+
+```python
+Data_descriptive_stats = pd.read_stata ('descriptive-statistics.dta')
+```
+
+
+```python
+Data_descriptive_stats
+```
+
+
+
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>shortnam</th>
+      <th>euro1900</th>
+      <th>excolony</th>
+      <th>avexpr</th>
+      <th>logpgp95</th>
+      <th>cons1</th>
+      <th>cons90</th>
+      <th>democ00a</th>
+      <th>cons00a</th>
+      <th>extmort4</th>
+      <th>logem4</th>
+      <th>loghjypl</th>
+      <th>baseco</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>AFG</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>93.699997</td>
+      <td>4.540098</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>AGO</td>
+      <td>8.000000</td>
+      <td>1.0</td>
+      <td>5.363636</td>
+      <td>7.770645</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>280.000000</td>
+      <td>5.634789</td>
+      <td>-3.411248</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ARE</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>7.181818</td>
+      <td>9.804219</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ARG</td>
+      <td>60.000004</td>
+      <td>1.0</td>
+      <td>6.386364</td>
+      <td>9.133459</td>
+      <td>1.0</td>
+      <td>6.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>68.900002</td>
+      <td>4.232656</td>
+      <td>-0.872274</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ARM</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.682482</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>AUS</td>
+      <td>98.000000</td>
+      <td>1.0</td>
+      <td>9.318182</td>
+      <td>9.897972</td>
+      <td>7.0</td>
+      <td>7.0</td>
+      <td>10.0</td>
+      <td>7.0</td>
+      <td>8.550000</td>
+      <td>2.145931</td>
+      <td>-0.170788</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>AUT</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>9.727273</td>
+      <td>9.974877</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-0.343900</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>AZE</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.306531</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>BDI</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>6.565265</td>
+      <td>5.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>280.000000</td>
+      <td>5.634789</td>
+      <td>-3.506558</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>BEL</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>9.681818</td>
+      <td>9.992871</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-0.179127</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>BEN</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>7.090077</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>266.519989</td>
+      <td>5.585449</td>
+      <td>-2.830218</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>BFA</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>4.454545</td>
+      <td>6.845880</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>280.000000</td>
+      <td>5.634789</td>
+      <td>-3.540459</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>BGD</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>5.136364</td>
+      <td>6.877296</td>
+      <td>7.0</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>71.410004</td>
+      <td>4.268438</td>
+      <td>-2.063568</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>BGR</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>8.909091</td>
+      <td>8.457443</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>BHR</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>8.000000</td>
+      <td>9.685953</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>BHS</td>
+      <td>10.000000</td>
+      <td>1.0</td>
+      <td>7.500000</td>
+      <td>9.285448</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>85.000000</td>
+      <td>4.442651</td>
+      <td>NaN</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>BIH</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>BLR</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>8.340456</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>BLZ</td>
+      <td>20.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>8.377932</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>163.300003</td>
+      <td>5.095589</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>BOL</td>
+      <td>30.000002</td>
+      <td>1.0</td>
+      <td>5.636364</td>
+      <td>7.926602</td>
+      <td>3.0</td>
+      <td>7.0</td>
+      <td>4.0</td>
+      <td>3.0</td>
+      <td>71.000000</td>
+      <td>4.262680</td>
+      <td>-1.966113</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>BRA</td>
+      <td>40.000000</td>
+      <td>1.0</td>
+      <td>7.909091</td>
+      <td>8.727454</td>
+      <td>1.0</td>
+      <td>7.0</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>71.000000</td>
+      <td>4.262680</td>
+      <td>-1.142564</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>BRB</td>
+      <td>20.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>9.266721</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>85.000000</td>
+      <td>4.442651</td>
+      <td>-0.906340</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>BTN</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>BWA</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>7.727273</td>
+      <td>8.855093</td>
+      <td>7.0</td>
+      <td>7.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-2.364460</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>CAF</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>7.192934</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>280.000000</td>
+      <td>5.634789</td>
+      <td>-3.411248</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>CAN</td>
+      <td>99.000000</td>
+      <td>1.0</td>
+      <td>9.727273</td>
+      <td>9.986449</td>
+      <td>7.0</td>
+      <td>7.0</td>
+      <td>9.0</td>
+      <td>7.0</td>
+      <td>16.100000</td>
+      <td>2.778819</td>
+      <td>-0.060812</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>CHE</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>10.000000</td>
+      <td>10.120211</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-0.134675</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>CHL</td>
+      <td>50.000000</td>
+      <td>1.0</td>
+      <td>7.818182</td>
+      <td>9.336092</td>
+      <td>1.0</td>
+      <td>7.0</td>
+      <td>5.0</td>
+      <td>7.0</td>
+      <td>68.900002</td>
+      <td>4.232656</td>
+      <td>-1.335601</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>CHN</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>7.772727</td>
+      <td>7.886081</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>118.000000</td>
+      <td>4.770685</td>
+      <td>-2.813411</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>CIV</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>7.000000</td>
+      <td>7.444249</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>668.000000</td>
+      <td>6.504288</td>
+      <td>-2.333044</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>133</th>
+      <td>STP</td>
+      <td>100.000000</td>
+      <td>1.0</td>
+      <td>8.409091</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>134</th>
+      <td>SUR</td>
+      <td>1.000000</td>
+      <td>NaN</td>
+      <td>4.681818</td>
+      <td>8.010000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>32.180000</td>
+      <td>3.471345</td>
+      <td>-1.370421</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>135</th>
+      <td>SVK</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>8.852236</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>136</th>
+      <td>SVN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>9.300181</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>137</th>
+      <td>SWE</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>9.500000</td>
+      <td>9.866304</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-0.239527</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>138</th>
+      <td>SWZ</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>8.107720</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-1.807889</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>139</th>
+      <td>SYR</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>5.818182</td>
+      <td>8.029433</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-0.825536</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>140</th>
+      <td>TCD</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>6.835185</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>280.000000</td>
+      <td>5.634789</td>
+      <td>-3.442019</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>141</th>
+      <td>TGO</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>6.909091</td>
+      <td>7.222566</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>668.000000</td>
+      <td>6.504288</td>
+      <td>-3.218876</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>142</th>
+      <td>THA</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>7.636364</td>
+      <td>8.774931</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>140.000000</td>
+      <td>4.941642</td>
+      <td>-1.851509</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>143</th>
+      <td>TJK</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>6.887553</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>144</th>
+      <td>TKM</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.640123</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>145</th>
+      <td>TTO</td>
+      <td>40.000000</td>
+      <td>1.0</td>
+      <td>7.454545</td>
+      <td>8.768730</td>
+      <td>7.0</td>
+      <td>7.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>85.000000</td>
+      <td>4.442651</td>
+      <td>-0.697155</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>146</th>
+      <td>TUN</td>
+      <td>3.000000</td>
+      <td>1.0</td>
+      <td>6.454545</td>
+      <td>8.482602</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>63.000000</td>
+      <td>4.143135</td>
+      <td>-1.527858</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>147</th>
+      <td>TUR</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>7.454545</td>
+      <td>8.641179</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-1.523260</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>148</th>
+      <td>TWN</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>9.227273</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-0.809681</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>149</th>
+      <td>TZA</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>6.636364</td>
+      <td>6.253829</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>145.000000</td>
+      <td>5.634789</td>
+      <td>-3.442019</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>150</th>
+      <td>UGA</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>4.454545</td>
+      <td>6.966024</td>
+      <td>7.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>280.000000</td>
+      <td>5.634789</td>
+      <td>-3.442019</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>151</th>
+      <td>UKR</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.811974</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>152</th>
+      <td>URY</td>
+      <td>60.000004</td>
+      <td>1.0</td>
+      <td>7.000000</td>
+      <td>9.031214</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>71.000000</td>
+      <td>4.262680</td>
+      <td>-1.078810</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>153</th>
+      <td>USA</td>
+      <td>87.500000</td>
+      <td>1.0</td>
+      <td>10.000000</td>
+      <td>10.215740</td>
+      <td>7.0</td>
+      <td>7.0</td>
+      <td>10.0</td>
+      <td>7.0</td>
+      <td>15.000000</td>
+      <td>2.708050</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>154</th>
+      <td>UZB</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.807917</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>155</th>
+      <td>VEN</td>
+      <td>20.000000</td>
+      <td>1.0</td>
+      <td>7.136364</td>
+      <td>9.071078</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>78.099998</td>
+      <td>4.357990</td>
+      <td>-0.703197</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>156</th>
+      <td>VNM</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>6.409091</td>
+      <td>7.279319</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>140.000000</td>
+      <td>4.941642</td>
+      <td>NaN</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>157</th>
+      <td>YEM</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>6.363636</td>
+      <td>6.646390</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-1.551169</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>158</th>
+      <td>YUG</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>6.318182</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-1.203973</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>159</th>
+      <td>ZAF</td>
+      <td>22.000000</td>
+      <td>1.0</td>
+      <td>6.863636</td>
+      <td>8.885994</td>
+      <td>3.0</td>
+      <td>7.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>15.500000</td>
+      <td>2.740840</td>
+      <td>-1.386294</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>160</th>
+      <td>ZAR</td>
+      <td>8.000000</td>
+      <td>1.0</td>
+      <td>3.500000</td>
+      <td>6.866933</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>240.000000</td>
+      <td>5.480639</td>
+      <td>-3.411248</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>161</th>
+      <td>ZMB</td>
+      <td>3.000000</td>
+      <td>1.0</td>
+      <td>6.636364</td>
+      <td>6.813445</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-2.975930</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>162</th>
+      <td>ZWE</td>
+      <td>7.200000</td>
+      <td>1.0</td>
+      <td>6.000000</td>
+      <td>7.696213</td>
+      <td>7.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-2.733368</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>163 rows × 13 columns</p>
+</div>
+
+
+
+
+```python
+import pylab
+s = pd.Series(Data_descriptive_stats.avexpr)
+p = s.plot(kind='hist', color='orange')
+pylab.rc("axes", linewidth=1.0)
+pylab.rc("lines", markeredgewidth=1.0) 
+pylab.xticks(fontsize=10)
+pylab.yticks(fontsize=10)
+plt.xlabel ('Avg. Protection against Expropriation Risk', fontsize=11)
+plt.ylabel ('Frequency', fontsize=11)
+plt.title ('Quality of Institutions', fontsize=12)
+plt.show()
+```
+
+
+![png](output_4_0.png)
+
+
+
+```python
+s = pd.Series(Data_descriptive_stats.logpgp95)
+p = s.plot(kind='hist', color='orange')
+pylab.rc("axes", linewidth=1.0)
+pylab.rc("lines", markeredgewidth=1.0) 
+pylab.xticks(fontsize=10)
+pylab.yticks(fontsize=10)
+plt.xlabel ('Log PPP GDP', fontsize=11)
+plt.ylabel ('Frequency', fontsize=11)
+plt.title ('GDP Distribution in 1995 (World Bank)', fontsize=12)
+plt.show()
+```
+
+
+![png](output_5_0.png)
+
+
+### OLS Regression
+Before applying the instrumental variable approach, the log per capita income is first regressed on the quality of institutions represented by the protection against expropriation variable in a ordinary least-squares regression. Additionally, we control for several factors such as geographical region and conditions. In mathematical terms, we evaluate
+$$
+log~y_{i} = \mu + \alpha R_{i} + X^{'}_{i} \gamma + \epsilon_{i}
+$$
+where:
+- $ log~y_{i} $ is the logarithm of the GDP per capita ( `logpgp95` ) between 1975 and 1995;
+- $ R_{i} $ is the *average protection against expropriation* ( `avexpr` )  between 1985 and 1995;
+- $ X^{'}_{i} $ is a vector of covariates that Acemoglu controls for, e.g.$~$ `africa`,$~$ `lat_abst` ,$~$ `asia` ,$~$ `other`;
+- $\epsilon_{i} $ is the random error term.
+
+The results on our coefficient of interest, $ \alpha $, indicate that there is, in fact, a positive and statistically significant correlation between institutional quality and GDP. However, we cannot infer any causal relationship from this result: are rich countries the ones with better institutions or are good institutions the key to a higher per capita GDP? Moreover, geographical characteristics seem to influence the GDP as well. For instance, the regression results show that the GDP of a country is lower when said country is located in Africa or Asia.
+
+
+```python
+Ols_data = pd.read_stata ('OLS.dta')
+```
+
+
+```python
+Ols_data
+```
+
+
+
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>shortnam</th>
+      <th>africa</th>
+      <th>lat_abst</th>
+      <th>avexpr</th>
+      <th>logpgp95</th>
+      <th>other</th>
+      <th>asia</th>
+      <th>loghjypl</th>
+      <th>baseco</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>AFG</td>
+      <td>0.0</td>
+      <td>0.366667</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>AGO</td>
+      <td>1.0</td>
+      <td>0.136667</td>
+      <td>5.363636</td>
+      <td>7.770645</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.411248</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ARE</td>
+      <td>0.0</td>
+      <td>0.266667</td>
+      <td>7.181818</td>
+      <td>9.804219</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ARG</td>
+      <td>0.0</td>
+      <td>0.377778</td>
+      <td>6.386364</td>
+      <td>9.133459</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.872274</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ARM</td>
+      <td>0.0</td>
+      <td>0.444444</td>
+      <td>NaN</td>
+      <td>7.682482</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>AUS</td>
+      <td>0.0</td>
+      <td>0.300000</td>
+      <td>9.318182</td>
+      <td>9.897972</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>-0.170788</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>AUT</td>
+      <td>0.0</td>
+      <td>0.524444</td>
+      <td>9.727273</td>
+      <td>9.974877</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.343900</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>AZE</td>
+      <td>0.0</td>
+      <td>0.447778</td>
+      <td>NaN</td>
+      <td>7.306531</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>BDI</td>
+      <td>1.0</td>
+      <td>0.036667</td>
+      <td>NaN</td>
+      <td>6.565265</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.506558</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>BEL</td>
+      <td>0.0</td>
+      <td>0.561111</td>
+      <td>9.681818</td>
+      <td>9.992871</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.179127</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>BEN</td>
+      <td>1.0</td>
+      <td>0.103333</td>
+      <td>NaN</td>
+      <td>7.090077</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-2.830218</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>BFA</td>
+      <td>1.0</td>
+      <td>0.144444</td>
+      <td>4.454545</td>
+      <td>6.845880</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.540459</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>BGD</td>
+      <td>0.0</td>
+      <td>0.266667</td>
+      <td>5.136364</td>
+      <td>6.877296</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>-2.063568</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>BGR</td>
+      <td>0.0</td>
+      <td>0.477778</td>
+      <td>8.909091</td>
+      <td>8.457443</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>BHR</td>
+      <td>0.0</td>
+      <td>0.288889</td>
+      <td>8.000000</td>
+      <td>9.685953</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>BHS</td>
+      <td>0.0</td>
+      <td>0.268333</td>
+      <td>7.500000</td>
+      <td>9.285448</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>BIH</td>
+      <td>0.0</td>
+      <td>0.488889</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>BLR</td>
+      <td>0.0</td>
+      <td>0.588889</td>
+      <td>NaN</td>
+      <td>8.340456</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>BLZ</td>
+      <td>0.0</td>
+      <td>0.190556</td>
+      <td>NaN</td>
+      <td>8.377932</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>BOL</td>
+      <td>0.0</td>
+      <td>0.188889</td>
+      <td>5.636364</td>
+      <td>7.926602</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.966113</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>BRA</td>
+      <td>0.0</td>
+      <td>0.111111</td>
+      <td>7.909091</td>
+      <td>8.727454</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.142564</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>BRB</td>
+      <td>0.0</td>
+      <td>0.145556</td>
+      <td>NaN</td>
+      <td>9.266721</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.906340</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>BTN</td>
+      <td>0.0</td>
+      <td>0.303333</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>BWA</td>
+      <td>1.0</td>
+      <td>0.244444</td>
+      <td>7.727273</td>
+      <td>8.855093</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-2.364460</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>CAF</td>
+      <td>1.0</td>
+      <td>0.077778</td>
+      <td>NaN</td>
+      <td>7.192934</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.411248</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>CAN</td>
+      <td>0.0</td>
+      <td>0.666667</td>
+      <td>9.727273</td>
+      <td>9.986449</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.060812</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>CHE</td>
+      <td>0.0</td>
+      <td>0.522222</td>
+      <td>10.000000</td>
+      <td>10.120211</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.134675</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>CHL</td>
+      <td>0.0</td>
+      <td>0.333333</td>
+      <td>7.818182</td>
+      <td>9.336092</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.335601</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>CHN</td>
+      <td>0.0</td>
+      <td>0.388889</td>
+      <td>7.772727</td>
+      <td>7.886081</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>-2.813411</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>CIV</td>
+      <td>1.0</td>
+      <td>0.088889</td>
+      <td>7.000000</td>
+      <td>7.444249</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-2.333044</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>133</th>
+      <td>STP</td>
+      <td>0.0</td>
+      <td>0.011111</td>
+      <td>8.409091</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>134</th>
+      <td>SUR</td>
+      <td>0.0</td>
+      <td>0.044444</td>
+      <td>4.681818</td>
+      <td>8.010000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.370421</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>135</th>
+      <td>SVK</td>
+      <td>0.0</td>
+      <td>0.537778</td>
+      <td>NaN</td>
+      <td>8.852236</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>136</th>
+      <td>SVN</td>
+      <td>0.0</td>
+      <td>0.511111</td>
+      <td>NaN</td>
+      <td>9.300181</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>137</th>
+      <td>SWE</td>
+      <td>0.0</td>
+      <td>0.688889</td>
+      <td>9.500000</td>
+      <td>9.866304</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.239527</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>138</th>
+      <td>SWZ</td>
+      <td>1.0</td>
+      <td>0.292222</td>
+      <td>NaN</td>
+      <td>8.107720</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.807889</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>139</th>
+      <td>SYR</td>
+      <td>0.0</td>
+      <td>0.388889</td>
+      <td>5.818182</td>
+      <td>8.029433</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>-0.825536</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>140</th>
+      <td>TCD</td>
+      <td>1.0</td>
+      <td>0.166667</td>
+      <td>NaN</td>
+      <td>6.835185</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.442019</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>141</th>
+      <td>TGO</td>
+      <td>1.0</td>
+      <td>0.088889</td>
+      <td>6.909091</td>
+      <td>7.222566</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.218876</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>142</th>
+      <td>THA</td>
+      <td>0.0</td>
+      <td>0.166667</td>
+      <td>7.636364</td>
+      <td>8.774931</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>-1.851509</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>143</th>
+      <td>TJK</td>
+      <td>0.0</td>
+      <td>0.433333</td>
+      <td>NaN</td>
+      <td>6.887553</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>144</th>
+      <td>TKM</td>
+      <td>0.0</td>
+      <td>0.444444</td>
+      <td>NaN</td>
+      <td>7.640123</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>145</th>
+      <td>TTO</td>
+      <td>0.0</td>
+      <td>0.122222</td>
+      <td>7.454545</td>
+      <td>8.768730</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.697155</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>146</th>
+      <td>TUN</td>
+      <td>1.0</td>
+      <td>0.377778</td>
+      <td>6.454545</td>
+      <td>8.482602</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.527858</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>147</th>
+      <td>TUR</td>
+      <td>0.0</td>
+      <td>0.433333</td>
+      <td>7.454545</td>
+      <td>8.641179</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>-1.523260</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>148</th>
+      <td>TWN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>9.227273</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>-0.809681</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>149</th>
+      <td>TZA</td>
+      <td>1.0</td>
+      <td>0.066667</td>
+      <td>6.636364</td>
+      <td>6.253829</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.442019</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>150</th>
+      <td>UGA</td>
+      <td>1.0</td>
+      <td>0.011111</td>
+      <td>4.454545</td>
+      <td>6.966024</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.442019</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>151</th>
+      <td>UKR</td>
+      <td>0.0</td>
+      <td>0.544444</td>
+      <td>NaN</td>
+      <td>7.811974</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>152</th>
+      <td>URY</td>
+      <td>0.0</td>
+      <td>0.366667</td>
+      <td>7.000000</td>
+      <td>9.031214</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.078810</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>153</th>
+      <td>USA</td>
+      <td>0.0</td>
+      <td>0.422222</td>
+      <td>10.000000</td>
+      <td>10.215740</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>154</th>
+      <td>UZB</td>
+      <td>0.0</td>
+      <td>0.455556</td>
+      <td>NaN</td>
+      <td>7.807917</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>155</th>
+      <td>VEN</td>
+      <td>0.0</td>
+      <td>0.088889</td>
+      <td>7.136364</td>
+      <td>9.071078</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.703197</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>156</th>
+      <td>VNM</td>
+      <td>0.0</td>
+      <td>0.177778</td>
+      <td>6.409091</td>
+      <td>7.279319</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>157</th>
+      <td>YEM</td>
+      <td>0.0</td>
+      <td>0.166667</td>
+      <td>6.363636</td>
+      <td>6.646390</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>-1.551169</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>158</th>
+      <td>YUG</td>
+      <td>0.0</td>
+      <td>0.488889</td>
+      <td>6.318182</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.203973</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>159</th>
+      <td>ZAF</td>
+      <td>1.0</td>
+      <td>0.322222</td>
+      <td>6.863636</td>
+      <td>8.885994</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-1.386294</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>160</th>
+      <td>ZAR</td>
+      <td>1.0</td>
+      <td>0.000000</td>
+      <td>3.500000</td>
+      <td>6.866933</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-3.411248</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>161</th>
+      <td>ZMB</td>
+      <td>1.0</td>
+      <td>0.166667</td>
+      <td>6.636364</td>
+      <td>6.813445</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-2.975930</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>162</th>
+      <td>ZWE</td>
+      <td>1.0</td>
+      <td>0.222222</td>
+      <td>6.000000</td>
+      <td>7.696213</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-2.733368</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>163 rows × 9 columns</p>
+</div>
+
+
+
+
+```python
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+```
+
+
+```python
+results = smf.ols('logpgp95 ~ avexpr + africa + asia + lat_abst + other', data=Ols_data).fit()
+```
+
+
+```python
+results.summary()
+```
+
+
+
+
+<table class="simpletable">
+<caption>OLS Regression Results</caption>
+<tr>
+  <th>Dep. Variable:</th>        <td>logpgp95</td>     <th>  R-squared:         </th> <td>   0.715</td>
+</tr>
+<tr>
+  <th>Model:</th>                   <td>OLS</td>       <th>  Adj. R-squared:    </th> <td>   0.702</td>
+</tr>
+<tr>
+  <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   52.74</td>
+</tr>
+<tr>
+  <th>Date:</th>             <td>Tue, 31 Jan 2017</td> <th>  Prob (F-statistic):</th> <td>4.18e-27</td>
+</tr>
+<tr>
+  <th>Time:</th>                 <td>16:57:29</td>     <th>  Log-Likelihood:    </th> <td> -102.45</td>
+</tr>
+<tr>
+  <th>No. Observations:</th>      <td>   111</td>      <th>  AIC:               </th> <td>   216.9</td>
+</tr>
+<tr>
+  <th>Df Residuals:</th>          <td>   105</td>      <th>  BIC:               </th> <td>   233.2</td>
+</tr>
+<tr>
+  <th>Df Model:</th>              <td>     5</td>      <th>                     </th>     <td> </td>   
+</tr>
+<tr>
+  <th>Covariance Type:</th>      <td>nonrobust</td>    <th>                     </th>     <td> </td>   
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+      <td></td>         <th>coef</th>     <th>std err</th>      <th>t</th>      <th>P>|t|</th> <th>[95.0% Conf. Int.]</th> 
+</tr>
+<tr>
+  <th>Intercept</th> <td>    5.8511</td> <td>    0.340</td> <td>   17.230</td> <td> 0.000</td> <td>    5.178     6.524</td>
+</tr>
+<tr>
+  <th>avexpr</th>    <td>    0.3896</td> <td>    0.051</td> <td>    7.691</td> <td> 0.000</td> <td>    0.289     0.490</td>
+</tr>
+<tr>
+  <th>africa</th>    <td>   -0.9164</td> <td>    0.166</td> <td>   -5.511</td> <td> 0.000</td> <td>   -1.246    -0.587</td>
+</tr>
+<tr>
+  <th>asia</th>      <td>   -0.1531</td> <td>    0.155</td> <td>   -0.989</td> <td> 0.325</td> <td>   -0.460     0.154</td>
+</tr>
+<tr>
+  <th>lat_abst</th>  <td>    0.3326</td> <td>    0.445</td> <td>    0.747</td> <td> 0.457</td> <td>   -0.551     1.216</td>
+</tr>
+<tr>
+  <th>other</th>     <td>    0.3035</td> <td>    0.375</td> <td>    0.810</td> <td> 0.420</td> <td>   -0.440     1.047</td>
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+  <th>Omnibus:</th>       <td> 4.342</td> <th>  Durbin-Watson:     </th> <td>   1.865</td>
+</tr>
+<tr>
+  <th>Prob(Omnibus):</th> <td> 0.114</td> <th>  Jarque-Bera (JB):  </th> <td>   3.936</td>
+</tr>
+<tr>
+  <th>Skew:</th>          <td>-0.457</td> <th>  Prob(JB):          </th> <td>   0.140</td>
+</tr>
+<tr>
+  <th>Kurtosis:</th>      <td> 3.126</td> <th>  Cond. No.          </th> <td>    58.2</td>
+</tr>
+</table>
+
+
+
+
+### First-stage
+Now, we turn to the analytical method that promises to yield valid insights regarding the research question. In the first stage of the instrumental variable (IV) analysis, the treatment variable is regressed on the instrumental variable. Here, the selected instrumental variable are the mortality rates faced by European settlers in colonial times since they are easy to measure and arguably exogenous - a necessary condition in the isolation of the effect the treatment variable has on the outcome variable. In particular we want to regress
+
+$$
+R_i = \zeta + \beta log M_i + X^{'}_{i} \delta + u_i
+$$
+
+where $log M_i$ is the *logaritm of European settlers' mortality* (`logem4`) and $u_{i} $ is the random error term. Note that $log M_i$ is the instrument used to predict the *average protection against expropriation risk* which will be employed in the <a id=f3>[second stage](#a3)</a> to calculate our coefficient of interest, $\alpha$.
+
+When regressing the institution quality on the colonists' mortality rates between the XVII and XIX century, we obtain a strong first stage, meaning that there is a significantly strong negative correlation between the two variables (taken as logs). In particular, a higher settler mortality rate is correlated with a lower institution quality. As a result, the pattern in the relationship between the two factors seems to be following the path theorised by Acemoglu, Johnson and Robinson: <br />
+
+| N. | Correlation |
+| --- | ----------- |  
+| 1. | `potential settler mortality rates` major determinant in `settlements`<sup id="a1">[[1]](#f1)</sup>
+| 2. | `settlements` major determinant in `institutions in 1900`|
+| 3. | `institutions in 1900` major determinant in `institutions today`|
+
+
+
+
+```python
+Data_first_stage = pd.read_stata ('1st-stage.dta')
+```
+
+
+```python
+Data_first_stage 
+```
+
+
+
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>lat_abst</th>
+      <th>euro1900</th>
+      <th>excolony</th>
+      <th>avexpr</th>
+      <th>logpgp95</th>
+      <th>cons1</th>
+      <th>indtime</th>
+      <th>democ00a</th>
+      <th>cons00a</th>
+      <th>extmort4</th>
+      <th>logem4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>NaN</td>
+      <td>28.000000</td>
+      <td>0.0</td>
+      <td>5.000000</td>
+      <td>NaN</td>
+      <td>3.0</td>
+      <td>154.0</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>78.099998</td>
+      <td>4.357990</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>4.431818</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>346</th>
+      <td>NaN</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>9.227273</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>347</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>348</th>
+      <td>0.066667</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>6.636364</td>
+      <td>6.253829</td>
+      <td>3.0</td>
+      <td>33.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>145.000000</td>
+      <td>5.634789</td>
+    </tr>
+    <tr>
+      <th>349</th>
+      <td>0.011111</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>4.454545</td>
+      <td>6.966024</td>
+      <td>7.0</td>
+      <td>33.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>280.000000</td>
+      <td>5.634789</td>
+    </tr>
+    <tr>
+      <th>350</th>
+      <td>0.544444</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.811974</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>351</th>
+      <td>0.366667</td>
+      <td>60.000004</td>
+      <td>1.0</td>
+      <td>7.000000</td>
+      <td>9.031214</td>
+      <td>1.0</td>
+      <td>165.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>71.000000</td>
+      <td>4.262680</td>
+    </tr>
+    <tr>
+      <th>352</th>
+      <td>0.422222</td>
+      <td>87.500000</td>
+      <td>1.0</td>
+      <td>10.000000</td>
+      <td>10.215740</td>
+      <td>7.0</td>
+      <td>195.0</td>
+      <td>10.0</td>
+      <td>7.0</td>
+      <td>15.000000</td>
+      <td>2.708050</td>
+    </tr>
+    <tr>
+      <th>353</th>
+      <td>0.455556</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.807917</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>354</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>355</th>
+      <td>0.146100</td>
+      <td>10.000000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>8.318742</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>85.000000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>356</th>
+      <td>0.088889</td>
+      <td>20.000000</td>
+      <td>1.0</td>
+      <td>7.136364</td>
+      <td>9.071078</td>
+      <td>1.0</td>
+      <td>165.0</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>78.099998</td>
+      <td>4.357990</td>
+    </tr>
+    <tr>
+      <th>357</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>358</th>
+      <td>0.177778</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>6.409091</td>
+      <td>7.279319</td>
+      <td>1.0</td>
+      <td>41.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>140.000000</td>
+      <td>4.941642</td>
+    </tr>
+    <tr>
+      <th>359</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>360</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>8.140316</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>361</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>362</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>363</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>364</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>7.867105</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>365</th>
+      <td>0.166667</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>6.363636</td>
+      <td>6.646390</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>366</th>
+      <td>0.488889</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>6.318182</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>367</th>
+      <td>0.488889</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>6.318182</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>368</th>
+      <td>0.322222</td>
+      <td>22.000000</td>
+      <td>1.0</td>
+      <td>6.863636</td>
+      <td>8.885994</td>
+      <td>3.0</td>
+      <td>139.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>15.500000</td>
+      <td>2.740840</td>
+    </tr>
+    <tr>
+      <th>369</th>
+      <td>0.000000</td>
+      <td>8.000000</td>
+      <td>1.0</td>
+      <td>3.500000</td>
+      <td>6.866933</td>
+      <td>1.0</td>
+      <td>35.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>240.000000</td>
+      <td>5.480639</td>
+    </tr>
+    <tr>
+      <th>370</th>
+      <td>0.166667</td>
+      <td>3.000000</td>
+      <td>1.0</td>
+      <td>6.636364</td>
+      <td>6.813445</td>
+      <td>3.0</td>
+      <td>31.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>371</th>
+      <td>0.222222</td>
+      <td>7.200000</td>
+      <td>1.0</td>
+      <td>6.000000</td>
+      <td>7.696213</td>
+      <td>7.0</td>
+      <td>72.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>372</th>
+      <td>0.222222</td>
+      <td>7.200000</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>7.0</td>
+      <td>72.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>373</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>374</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>375</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>376 rows × 11 columns</p>
+</div>
+
+
+
+
+```python
+First_stage = smf.ols('avexpr ~ logem4', data=Data_first_stage).fit()
+```
+
+
+```python
+First_stage.summary()
+```
+
+
+
+
+<table class="simpletable">
+<caption>OLS Regression Results</caption>
+<tr>
+  <th>Dep. Variable:</th>         <td>avexpr</td>      <th>  R-squared:         </th> <td>   0.298</td>
+</tr>
+<tr>
+  <th>Model:</th>                   <td>OLS</td>       <th>  Adj. R-squared:    </th> <td>   0.288</td>
+</tr>
+<tr>
+  <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   30.99</td>
+</tr>
+<tr>
+  <th>Date:</th>             <td>Tue, 31 Jan 2017</td> <th>  Prob (F-statistic):</th> <td>4.08e-07</td>
+</tr>
+<tr>
+  <th>Time:</th>                 <td>16:57:32</td>     <th>  Log-Likelihood:    </th> <td> -126.60</td>
+</tr>
+<tr>
+  <th>No. Observations:</th>      <td>    75</td>      <th>  AIC:               </th> <td>   257.2</td>
+</tr>
+<tr>
+  <th>Df Residuals:</th>          <td>    73</td>      <th>  BIC:               </th> <td>   261.8</td>
+</tr>
+<tr>
+  <th>Df Model:</th>              <td>     1</td>      <th>                     </th>     <td> </td>   
+</tr>
+<tr>
+  <th>Covariance Type:</th>      <td>nonrobust</td>    <th>                     </th>     <td> </td>   
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+      <td></td>         <th>coef</th>     <th>std err</th>      <th>t</th>      <th>P>|t|</th> <th>[95.0% Conf. Int.]</th> 
+</tr>
+<tr>
+  <th>Intercept</th> <td>    9.4925</td> <td>    0.550</td> <td>   17.263</td> <td> 0.000</td> <td>    8.397    10.588</td>
+</tr>
+<tr>
+  <th>logem4</th>    <td>   -0.6441</td> <td>    0.116</td> <td>   -5.567</td> <td> 0.000</td> <td>   -0.875    -0.413</td>
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+  <th>Omnibus:</th>       <td> 0.907</td> <th>  Durbin-Watson:     </th> <td>   1.806</td>
+</tr>
+<tr>
+  <th>Prob(Omnibus):</th> <td> 0.635</td> <th>  Jarque-Bera (JB):  </th> <td>   0.873</td>
+</tr>
+<tr>
+  <th>Skew:</th>          <td>-0.021</td> <th>  Prob(JB):          </th> <td>   0.646</td>
+</tr>
+<tr>
+  <th>Kurtosis:</th>      <td> 2.473</td> <th>  Cond. No.          </th> <td>    17.8</td>
+</tr>
+</table>
+
+
+
+
+### Exclusion Restriction
+In order for the instrumental variable regression method to be valid, the so-called *exclusion restriction* has to be fulfilled. Said condition requires the instrumental variable to influence the outcome of interest only via the treatment variable. It is fairly straightforward that the colonists' expected mortality rates between the seventeenth and nineteenth century (our instrument) are in no way directly related to nowadays economic performance, the outcome variable, in each specific country. In fact, the only concern that might arise relates to current diseases: in such case, the instrument's effect on GDP might be a mere reflection of the disease environment and not a consequence of the country's quality of institutions. However, it has been shown that the colonists' mortality rates were maily due to their lack of immunity against diseases such as malaria and yellow fever, immunity that had been developed by the indigenous population over the centuries. It is therefore unlikely that such diseases take a central role in causing some former colonies to be extremely poor. Hence,  
+> "The advantage of our approach is that conditional on the variables that we already control for, settler mortality more than 100 years ago should have no effect on output today, other than through its effect on institutions."                                                                                           
+> _Acemoglu et al., 2001_
+
+### Second-stage
+In the second stage of the IV regression analysis, the impact of institutions on income per capita is estimated. Since it is not possible to reproduce the instrumental variable regression command that the authors apply with the python software, we conduct the second-stage analysis using the OLS regression as before. In the original paper, Acemoglu et al. replicate the second stage of the analysis with the ordinary least-squares method as well as shown in <a id="a2">[Table 5](#f2)</a>. In particular, we estimate the following equation
+
+$$
+log~y_{i} = \mu + \alpha \hat{R}_{i} + X^{'}_{i}\gamma + \epsilon_{i}
+$$
+
+where 
+- $\hat{R}_{i}$ is the value of *average expropriation risk* obtained in the <a id=a3>[first stage](#f3)</a>;
+- $\alpha$ is our coefficient of interest, i.e. it represents the causal relationship running between quality of institutions and per capita GDP;
+- $X^{'}_{i}$ is the matrix containing covariates that the authors control for, e.g. `lat_abst`, `f_brit`, `f_french`, `sjlofr` in the following table;
+- $\epsilon_{i} $ is the random error term.
+
+
+The regression results match the ones of the paper and show a highly significant positive correlation between the type and quality of institutions and the level of income in the investigated countries (0.4761). It can be seen that the effect is even larger than estimated in the predictive OLS regression above (0.3896). These findings support the initial expectations in which more extensive and higher quality institutions lead to an overall better economic performance.
+
+
+```python
+Data_IV_reg = pd.read_stata ('IV-REG-additional-controls.dta')
+```
+
+
+```python
+Data_IV_reg
+```
+
+
+
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>shortnam</th>
+      <th>catho80</th>
+      <th>muslim80</th>
+      <th>lat_abst</th>
+      <th>no_cpm80</th>
+      <th>f_brit</th>
+      <th>f_french</th>
+      <th>avexpr</th>
+      <th>sjlofr</th>
+      <th>logpgp95</th>
+      <th>logem4</th>
+      <th>baseco</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>AFG</td>
+      <td>0.000000</td>
+      <td>99.300003</td>
+      <td>0.366667</td>
+      <td>0.699997</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>4.540098</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>AGO</td>
+      <td>68.699997</td>
+      <td>0.000000</td>
+      <td>0.136667</td>
+      <td>11.500004</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.363636</td>
+      <td>1.0</td>
+      <td>7.770645</td>
+      <td>5.634789</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ARE</td>
+      <td>0.400000</td>
+      <td>94.900002</td>
+      <td>0.266667</td>
+      <td>4.399999</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>7.181818</td>
+      <td>0.0</td>
+      <td>9.804219</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ARG</td>
+      <td>91.599998</td>
+      <td>0.200000</td>
+      <td>0.377778</td>
+      <td>5.500001</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.386364</td>
+      <td>1.0</td>
+      <td>9.133459</td>
+      <td>4.232656</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ARM</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.444444</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>7.682482</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>AUS</td>
+      <td>29.600000</td>
+      <td>0.200000</td>
+      <td>0.300000</td>
+      <td>46.700001</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>9.318182</td>
+      <td>0.0</td>
+      <td>9.897972</td>
+      <td>2.145931</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>AUT</td>
+      <td>88.800003</td>
+      <td>0.600000</td>
+      <td>0.524444</td>
+      <td>4.099997</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>9.727273</td>
+      <td>0.0</td>
+      <td>9.974877</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>AZE</td>
+      <td>0.000000</td>
+      <td>93.400002</td>
+      <td>0.447778</td>
+      <td>6.599998</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>7.306531</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>BDI</td>
+      <td>78.300003</td>
+      <td>0.900000</td>
+      <td>0.036667</td>
+      <td>15.899997</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>6.565265</td>
+      <td>5.634789</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>BEL</td>
+      <td>90.000000</td>
+      <td>1.100000</td>
+      <td>0.561111</td>
+      <td>8.500000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>9.681818</td>
+      <td>1.0</td>
+      <td>9.992871</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>BEN</td>
+      <td>18.500000</td>
+      <td>15.200000</td>
+      <td>0.103333</td>
+      <td>63.500000</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>7.090077</td>
+      <td>5.585449</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>BFA</td>
+      <td>9.000000</td>
+      <td>43.000000</td>
+      <td>0.144444</td>
+      <td>46.400002</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>4.454545</td>
+      <td>1.0</td>
+      <td>6.845880</td>
+      <td>5.634789</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>BGD</td>
+      <td>0.200000</td>
+      <td>85.900002</td>
+      <td>0.266667</td>
+      <td>13.699999</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>5.136364</td>
+      <td>0.0</td>
+      <td>6.877296</td>
+      <td>4.268438</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>BGR</td>
+      <td>0.500000</td>
+      <td>10.600000</td>
+      <td>0.477778</td>
+      <td>88.500000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>8.909091</td>
+      <td>0.0</td>
+      <td>8.457443</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>BHR</td>
+      <td>0.800000</td>
+      <td>95.000000</td>
+      <td>0.288889</td>
+      <td>3.300000</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>8.000000</td>
+      <td>0.0</td>
+      <td>9.685953</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>BHS</td>
+      <td>25.500000</td>
+      <td>0.000000</td>
+      <td>0.268333</td>
+      <td>27.300003</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>7.500000</td>
+      <td>0.0</td>
+      <td>9.285448</td>
+      <td>4.442651</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>BIH</td>
+      <td>15.000000</td>
+      <td>40.000000</td>
+      <td>0.488889</td>
+      <td>41.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>BLR</td>
+      <td>14.000000</td>
+      <td>0.000000</td>
+      <td>0.588889</td>
+      <td>86.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>8.340456</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>BLZ</td>
+      <td>66.800003</td>
+      <td>0.000000</td>
+      <td>0.190556</td>
+      <td>19.999996</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>8.377932</td>
+      <td>5.095589</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>BOL</td>
+      <td>92.500000</td>
+      <td>0.000000</td>
+      <td>0.188889</td>
+      <td>5.200000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.636364</td>
+      <td>1.0</td>
+      <td>7.926602</td>
+      <td>4.262680</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>BRA</td>
+      <td>87.800003</td>
+      <td>0.100000</td>
+      <td>0.111111</td>
+      <td>8.099997</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>7.909091</td>
+      <td>1.0</td>
+      <td>8.727454</td>
+      <td>4.262680</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>BRB</td>
+      <td>5.900000</td>
+      <td>0.200000</td>
+      <td>0.145556</td>
+      <td>60.700001</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>9.266721</td>
+      <td>4.442651</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>BTN</td>
+      <td>0.000000</td>
+      <td>5.000000</td>
+      <td>0.303333</td>
+      <td>95.000000</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>BWA</td>
+      <td>9.400000</td>
+      <td>0.000000</td>
+      <td>0.244444</td>
+      <td>63.799999</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>7.727273</td>
+      <td>0.0</td>
+      <td>8.855093</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>CAF</td>
+      <td>33.099998</td>
+      <td>3.200000</td>
+      <td>0.077778</td>
+      <td>13.700002</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>7.192934</td>
+      <td>5.634789</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>CAN</td>
+      <td>46.599998</td>
+      <td>0.600000</td>
+      <td>0.666667</td>
+      <td>23.200001</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>9.727273</td>
+      <td>0.0</td>
+      <td>9.986449</td>
+      <td>2.778819</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>CHE</td>
+      <td>52.799999</td>
+      <td>0.300000</td>
+      <td>0.522222</td>
+      <td>3.700000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>10.000000</td>
+      <td>0.0</td>
+      <td>10.120211</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>CHL</td>
+      <td>82.099998</td>
+      <td>0.000000</td>
+      <td>0.333333</td>
+      <td>16.000002</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>7.818182</td>
+      <td>1.0</td>
+      <td>9.336092</td>
+      <td>4.232656</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>CHN</td>
+      <td>0.000000</td>
+      <td>2.400000</td>
+      <td>0.388889</td>
+      <td>97.599998</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>7.772727</td>
+      <td>0.0</td>
+      <td>7.886081</td>
+      <td>4.770685</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>CIV</td>
+      <td>18.500000</td>
+      <td>24.000000</td>
+      <td>0.088889</td>
+      <td>52.799999</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>7.000000</td>
+      <td>1.0</td>
+      <td>7.444249</td>
+      <td>6.504288</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>133</th>
+      <td>STP</td>
+      <td>92.400002</td>
+      <td>0.000000</td>
+      <td>0.011111</td>
+      <td>5.399999</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>8.409091</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>134</th>
+      <td>SUR</td>
+      <td>36.000000</td>
+      <td>13.000000</td>
+      <td>0.044444</td>
+      <td>14.400002</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>4.681818</td>
+      <td>1.0</td>
+      <td>8.010000</td>
+      <td>3.471345</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>135</th>
+      <td>SVK</td>
+      <td>74.000000</td>
+      <td>0.000000</td>
+      <td>0.537778</td>
+      <td>17.600000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>8.852236</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>136</th>
+      <td>SVN</td>
+      <td>71.400002</td>
+      <td>1.500000</td>
+      <td>0.511111</td>
+      <td>27.099998</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>9.300181</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>137</th>
+      <td>SWE</td>
+      <td>1.400000</td>
+      <td>0.100000</td>
+      <td>0.688889</td>
+      <td>30.099998</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>9.500000</td>
+      <td>0.0</td>
+      <td>9.866304</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>138</th>
+      <td>SWZ</td>
+      <td>10.800000</td>
+      <td>0.100000</td>
+      <td>0.292222</td>
+      <td>55.199997</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>8.107720</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>139</th>
+      <td>SYR</td>
+      <td>1.300000</td>
+      <td>89.599998</td>
+      <td>0.388889</td>
+      <td>8.900002</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>5.818182</td>
+      <td>1.0</td>
+      <td>8.029433</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>140</th>
+      <td>TCD</td>
+      <td>21.000000</td>
+      <td>44.000000</td>
+      <td>0.166667</td>
+      <td>23.400000</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>6.835185</td>
+      <td>5.634789</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>141</th>
+      <td>TGO</td>
+      <td>29.299999</td>
+      <td>17.000000</td>
+      <td>0.088889</td>
+      <td>47.599998</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>6.909091</td>
+      <td>1.0</td>
+      <td>7.222566</td>
+      <td>6.504288</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>142</th>
+      <td>THA</td>
+      <td>0.400000</td>
+      <td>3.900000</td>
+      <td>0.166667</td>
+      <td>95.500000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>7.636364</td>
+      <td>0.0</td>
+      <td>8.774931</td>
+      <td>4.941642</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>143</th>
+      <td>TJK</td>
+      <td>0.000000</td>
+      <td>85.000000</td>
+      <td>0.433333</td>
+      <td>15.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>6.887553</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>144</th>
+      <td>TKM</td>
+      <td>0.000000</td>
+      <td>87.000000</td>
+      <td>0.444444</td>
+      <td>13.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>7.640123</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>145</th>
+      <td>TTO</td>
+      <td>35.799999</td>
+      <td>6.500000</td>
+      <td>0.122222</td>
+      <td>44.500000</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>7.454545</td>
+      <td>0.0</td>
+      <td>8.768730</td>
+      <td>4.442651</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>146</th>
+      <td>TUN</td>
+      <td>0.100000</td>
+      <td>99.400002</td>
+      <td>0.377778</td>
+      <td>0.499998</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>6.454545</td>
+      <td>1.0</td>
+      <td>8.482602</td>
+      <td>4.143135</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>147</th>
+      <td>TUR</td>
+      <td>0.100000</td>
+      <td>99.199997</td>
+      <td>0.433333</td>
+      <td>0.700003</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>7.454545</td>
+      <td>1.0</td>
+      <td>8.641179</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>148</th>
+      <td>TWN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>9.227273</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>149</th>
+      <td>TZA</td>
+      <td>28.200001</td>
+      <td>32.500000</td>
+      <td>0.066667</td>
+      <td>28.099998</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.636364</td>
+      <td>0.0</td>
+      <td>6.253829</td>
+      <td>5.634789</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>150</th>
+      <td>UGA</td>
+      <td>49.599998</td>
+      <td>6.600000</td>
+      <td>0.011111</td>
+      <td>41.900002</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>4.454545</td>
+      <td>0.0</td>
+      <td>6.966024</td>
+      <td>5.634789</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>151</th>
+      <td>UKR</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.544444</td>
+      <td>100.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>7.811974</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>152</th>
+      <td>URY</td>
+      <td>59.500000</td>
+      <td>0.000000</td>
+      <td>0.366667</td>
+      <td>38.599998</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>7.000000</td>
+      <td>1.0</td>
+      <td>9.031214</td>
+      <td>4.262680</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>153</th>
+      <td>USA</td>
+      <td>30.000000</td>
+      <td>0.800000</td>
+      <td>0.422222</td>
+      <td>25.600002</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>10.000000</td>
+      <td>0.0</td>
+      <td>10.215740</td>
+      <td>2.708050</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>154</th>
+      <td>UZB</td>
+      <td>0.000000</td>
+      <td>88.000000</td>
+      <td>0.455556</td>
+      <td>12.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>7.807917</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>155</th>
+      <td>VEN</td>
+      <td>94.800003</td>
+      <td>0.000000</td>
+      <td>0.088889</td>
+      <td>4.199997</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>7.136364</td>
+      <td>1.0</td>
+      <td>9.071078</td>
+      <td>4.357990</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>156</th>
+      <td>VNM</td>
+      <td>3.900000</td>
+      <td>1.000000</td>
+      <td>0.177778</td>
+      <td>94.900002</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>6.409091</td>
+      <td>1.0</td>
+      <td>7.279319</td>
+      <td>4.941642</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>157</th>
+      <td>YEM</td>
+      <td>0.000000</td>
+      <td>99.500000</td>
+      <td>0.166667</td>
+      <td>0.400000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.363636</td>
+      <td>1.0</td>
+      <td>6.646390</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>158</th>
+      <td>YUG</td>
+      <td>4.000000</td>
+      <td>19.000000</td>
+      <td>0.488889</td>
+      <td>76.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.318182</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>159</th>
+      <td>ZAF</td>
+      <td>10.400000</td>
+      <td>1.300000</td>
+      <td>0.322222</td>
+      <td>49.299999</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>6.863636</td>
+      <td>0.0</td>
+      <td>8.885994</td>
+      <td>2.740840</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>160</th>
+      <td>ZAR</td>
+      <td>48.400002</td>
+      <td>1.400000</td>
+      <td>0.000000</td>
+      <td>21.199999</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3.500000</td>
+      <td>1.0</td>
+      <td>6.866933</td>
+      <td>5.480639</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>161</th>
+      <td>ZMB</td>
+      <td>26.200001</td>
+      <td>0.300000</td>
+      <td>0.166667</td>
+      <td>41.599998</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>6.636364</td>
+      <td>0.0</td>
+      <td>6.813445</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>162</th>
+      <td>ZWE</td>
+      <td>14.400000</td>
+      <td>0.900000</td>
+      <td>0.222222</td>
+      <td>63.299999</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>6.000000</td>
+      <td>0.0</td>
+      <td>7.696213</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>163 rows × 12 columns</p>
+</div>
+
+
+
+
+```python
+Second_stage = smf.ols('logpgp95 ~ avexpr + lat_abst + f_brit + f_french + sjlofr', data=Data_IV_reg).fit()
+
+```
+
+
+```python
+Second_stage.summary()
+```
+
+
+
+
+<table class="simpletable">
+<caption>OLS Regression Results</caption>
+<tr>
+  <th>Dep. Variable:</th>        <td>logpgp95</td>     <th>  R-squared:         </th> <td>   0.670</td>
+</tr>
+<tr>
+  <th>Model:</th>                   <td>OLS</td>       <th>  Adj. R-squared:    </th> <td>   0.654</td>
+</tr>
+<tr>
+  <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   42.55</td>
+</tr>
+<tr>
+  <th>Date:</th>             <td>Tue, 31 Jan 2017</td> <th>  Prob (F-statistic):</th> <td>9.33e-24</td>
+</tr>
+<tr>
+  <th>Time:</th>                 <td>16:57:35</td>     <th>  Log-Likelihood:    </th> <td> -110.70</td>
+</tr>
+<tr>
+  <th>No. Observations:</th>      <td>   111</td>      <th>  AIC:               </th> <td>   233.4</td>
+</tr>
+<tr>
+  <th>Df Residuals:</th>          <td>   105</td>      <th>  BIC:               </th> <td>   249.7</td>
+</tr>
+<tr>
+  <th>Df Model:</th>              <td>     5</td>      <th>                     </th>     <td> </td>   
+</tr>
+<tr>
+  <th>Covariance Type:</th>      <td>nonrobust</td>    <th>                     </th>     <td> </td>   
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+      <td></td>         <th>coef</th>     <th>std err</th>      <th>t</th>      <th>P>|t|</th> <th>[95.0% Conf. Int.]</th> 
+</tr>
+<tr>
+  <th>Intercept</th> <td>    4.2941</td> <td>    0.404</td> <td>   10.628</td> <td> 0.000</td> <td>    3.493     5.095</td>
+</tr>
+<tr>
+  <th>avexpr</th>    <td>    0.4761</td> <td>    0.056</td> <td>    8.498</td> <td> 0.000</td> <td>    0.365     0.587</td>
+</tr>
+<tr>
+  <th>lat_abst</th>  <td>    1.2293</td> <td>    0.487</td> <td>    2.525</td> <td> 0.013</td> <td>    0.264     2.195</td>
+</tr>
+<tr>
+  <th>f_brit</th>    <td>    0.3231</td> <td>    0.179</td> <td>    1.808</td> <td> 0.073</td> <td>   -0.031     0.677</td>
+</tr>
+<tr>
+  <th>f_french</th>  <td>   -0.3784</td> <td>    0.202</td> <td>   -1.870</td> <td> 0.064</td> <td>   -0.780     0.023</td>
+</tr>
+<tr>
+  <th>sjlofr</th>    <td>    0.6409</td> <td>    0.176</td> <td>    3.650</td> <td> 0.000</td> <td>    0.293     0.989</td>
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+  <th>Omnibus:</th>       <td> 8.072</td> <th>  Durbin-Watson:     </th> <td>   1.685</td>
+</tr>
+<tr>
+  <th>Prob(Omnibus):</th> <td> 0.018</td> <th>  Jarque-Bera (JB):  </th> <td>   7.916</td>
+</tr>
+<tr>
+  <th>Skew:</th>          <td>-0.643</td> <th>  Prob(JB):          </th> <td>  0.0191</td>
+</tr>
+<tr>
+  <th>Kurtosis:</th>      <td> 3.239</td> <th>  Cond. No.          </th> <td>    59.3</td>
+</tr>
+</table>
+
+
+
+### Conclusion
+In the presented work, we reproduced the findings of Acemoglu et al. concerning the interdependence between institutions and economic performance of former European colonies. In line with the methodoloy of the original paper, we utilized the two-stage instrumental variable approach in order to isolate exogenous sources of variation in institutions to assess their impact on income per capita. This procedure is crucial in establishing a causal relationship between the two investigated variables of interest, which, in turn, allows for the inference of valid outcomes. The results we obtained in the regression analyses state a large and statistically significant effect of institutional structure on economic performance measured by GDP. Naturally, there are many questions that presented paper does not cover and which could be studied in further scientific research. However, the given findings present valuable insights into the determinants of a country's economic efficiency and therefore wealth.
+
+********************
+#### Notes
+
+<a id="f1">[1]</a>: The Pilgrim Fathers decided to emigrate to the U.S. instead of Guyana because of their awareness about mortality rates in the latter country. [↩](#a1)  
+
+**********
+#### Tables
+
+- <a id=f4>[Appendix Table A1](#a4)</a> Gives an in-depth description of data and sources in Acemoglu et al., 2001.
+
+
+```python
+from IPython.display import Image, display
+display(Image(filename='A1.png'))
+```
+
+
+![png](output_26_0.png)
+
+
+- <a id="f2">[Table 5](#a2)</a> replicates the IV regression results in obtained by Acemoglu et al., 2001.
+
+
+```python
+from IPython.display import Image, display
+display(Image(filename='Table1.png'))
+```
+
+
+![png](output_28_0.png)
+
+
+
+```python
+
+```
